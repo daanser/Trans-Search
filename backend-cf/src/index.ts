@@ -399,6 +399,12 @@ app.delete("/articles/:articleId", async (c) => {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     await ensureCollection(env)
+    const url = new URL(request.url)
+    if (url.pathname.startsWith("/api/")) {
+      url.pathname = url.pathname.replace("/api", "")
+      const req = new Request(url.toString(), request)
+      return app.fetch(req, env, ctx)
+    }
     return app.fetch(request, env, ctx)
   },
 }

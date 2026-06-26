@@ -10,7 +10,8 @@ function headers(env: Env): Record<string, string> {
 }
 
 function url(env: Env, path: string): string {
-  const base = env.QDRANT_URL.replace(/\/+$/, "")
+  const base = (env.QDRANT_URL ?? "").replace(/\/+$/, "")
+  if (!base) throw new Error("QDRANT_URL environment variable is not set")
   return `${base}${path}`
 }
 

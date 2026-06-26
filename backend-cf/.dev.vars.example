@@ -1,0 +1,4 @@
+OPENAI_API_KEY=your_openai_api_key
+QDRANT_URL=https://your-cluster.cloud.qdrant.io:6333
+QDRANT_API_KEY=your_qdrant_api_key
+ADMIN_API_KEY=your_admin_key
