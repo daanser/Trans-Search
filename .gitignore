@@ -35,3 +35,9 @@ qdrant_data/
 
 # Config
 backend/config.json
+
+# Cloudflare Workers
+backend-cf/node_modules/
+backend-cf/dist/
+backend-cf/.wrangler/
+backend-cf/dev.vars
