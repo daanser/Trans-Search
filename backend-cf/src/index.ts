@@ -138,7 +138,7 @@ app.get("/search", async (c) => {
 
     const results = Array.from(seen.values())
     return c.json(results, 200, {
-      "X-Expanded-Query": expandedQ,
+      "X-Expanded-Query": encodeURIComponent(expandedQ),
     })
   })
 
