@@ -136,9 +136,10 @@ app.get("/search", async (c) => {
     if (seen.size >= topK) break
   }
 
-  const results = Array.from(seen.values())
-  return c.json(results, 200, {
-    "X-Expanded-Query": expandedQ,
+    const results = Array.from(seen.values())
+    return c.json(results, 200, {
+      "X-Expanded-Query": expandedQ,
+    })
   })
 
 app.get("/tree", async (c) => {
