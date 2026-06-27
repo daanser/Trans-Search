@@ -45,6 +45,7 @@ app.use(
     },
     allowMethods: ["GET", "POST", "PATCH", "DELETE"],
     allowHeaders: ["Content-Type", "X-Admin-Key"],
+    exposeHeaders: ["X-Expanded-Query"],
   }),
 )
 
@@ -135,8 +136,10 @@ app.get("/search", async (c) => {
     if (seen.size >= topK) break
   }
 
-  return c.json(Array.from(seen.values()))
-})
+  const results = Array.from(seen.values())
+  return c.json(results, 200, {
+    "X-Expanded-Query": expandedQ,
+  })
 
 app.get("/tree", async (c) => {
   const ip = getClientIP(c.req.raw)
