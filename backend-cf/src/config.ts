@@ -28,7 +28,7 @@ export class Config {
     this.chunk_overlap = parseInt(env.CHUNK_OVERLAP ?? "80", 10)
     this.score_threshold = parseFloat(env.SCORE_THRESHOLD ?? "0.25")
     this.query_expand = (env.QUERY_EXPAND ?? "true").toLowerCase() === "true"
-    this.hybrid_search = (env.HYBRID_SEARCH ?? "false").toLowerCase() === "true"
+    this.hybrid_search = (env.HYBRID_SEARCH ?? "true").toLowerCase() === "true"
   }
 
   apply(update: ConfigUpdate) {
