@@ -23,7 +23,7 @@ export class Config {
     this.openai_base_url = env.OPENAI_BASE_URL ?? "https://open.bigmodel.cn/api/paas/v4/"
     this.embed_model = env.EMBED_MODEL ?? "embedding-3"
     this.embed_dim = parseInt(env.EMBED_DIM ?? "2048", 10)
-    this.chat_model = env.CHAT_MODEL ?? "glm-4-flash"
+    this.chat_model = env.CHAT_MODEL ?? "glm-4.7-flash"
     this.chunk_size = parseInt(env.CHUNK_SIZE ?? "600", 10)
     this.chunk_overlap = parseInt(env.CHUNK_OVERLAP ?? "80", 10)
     this.score_threshold = parseFloat(env.SCORE_THRESHOLD ?? "0.25")
