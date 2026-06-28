@@ -500,6 +500,7 @@ function switchTab(name, navEl){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   if(navEl) navEl.classList.add('active');
+  if(window.innerWidth<=720) closeMobSidebar();
   if(name==='overview') loadStats();
   if(name==='tree-edit') loadTreeEditor();
   if(name==='articles') loadArticles();
@@ -1212,12 +1213,6 @@ function toggleMobSidebar(){
 function closeMobSidebar(){
   document.getElementById('admin-sidebar').classList.remove('mob-open');
   document.getElementById('mob-overlay').style.display='none';
-}
-// 切换 tab 时在移动端自动关闭侧边栏
-const _origSwitchTab=switchTab;
-function switchTab(name,el){
-  _origSwitchTab(name,el);
-  if(window.innerWidth<=720) closeMobSidebar();
 }
 
 // 初始化
