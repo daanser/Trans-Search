@@ -46,7 +46,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 .card-title svg{width:15px;height:15px;color:var(--accent)}
 
 /* stats */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
 .stat-num{font-size:26px;font-weight:700;letter-spacing:-.02em}
 .stat-label{font-size:12px;color:var(--muted);margin-top:2px}
@@ -156,9 +156,23 @@ table.art-table tr:hover td{background:var(--bg)}
 .toggle-track::after{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .toggle-switch input:checked+.toggle-track{background:var(--accent)}
 .toggle-switch input:checked+.toggle-track::after{transform:translateX(18px)}
+/* 移动端侧边栏遮罩 */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:89}
+.sidebar-fab{display:none;position:fixed;bottom:20px;left:16px;z-index:200;
+  width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;
+  align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.25);border:none;cursor:pointer}
+.sidebar-fab svg{width:20px;height:20px}
 @media(max-width:720px){
-  .sidebar{display:none}.main,.api-bar{margin-left:0}
-  .stats-grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}
+  .sidebar{display:block;transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:90}
+  .sidebar.mob-open{transform:translateX(0)}
+  .main,.api-bar{margin-left:0}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .api-bar{flex-wrap:wrap;padding:8px 14px;gap:6px}
+  .api-bar-row{display:contents}
+  .api-bar-break{flex-basis:100%;height:0}
+  .sidebar-fab{display:flex}
+  .tree-editor-split{grid-template-columns:1fr!important}
 }
 </style>
 </head>
@@ -167,16 +181,21 @@ table.art-table tr:hover td{background:var(--bg)}
 <!-- API bar -->
 <div class="api-bar">
   <div class="api-dot" id="api-dot"></div>
-  <span>后端：</span>
-  <input type="text" id="api-url" value="https://search-api.transhelper.org">
-  <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="checkApi()">连接</button>
-  <span style="margin-left:12px;font-size:12px;color:var(--muted)">Admin Key：</span>
-  <input type="password" id="admin-key" placeholder="管理员 Key" style="width:180px;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px;font-family:var(--font);outline:none;color:var(--text)" oninput="localStorage.setItem('adminKey',this.value)">
+  <span style="white-space:nowrap">后端：</span>
+  <input type="text" id="api-url" value="http://localhost:8000" style="flex:1;min-width:140px">
+  <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;white-space:nowrap" onclick="checkApi()">连接</button>
   <span id="api-msg" style="font-size:12px"></span>
+  <div class="api-bar-break"></div>
+  <span style="font-size:12px;color:var(--muted);white-space:nowrap">Admin Key：</span>
+  <input type="password" id="admin-key" placeholder="管理员 Key" style="flex:1;min-width:140px;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px;font-family:var(--font);outline:none;color:var(--text)" oninput="localStorage.setItem('adminKey',this.value)">
 </div>
 
+<div class="sidebar-overlay" id="mob-overlay" onclick="closeMobSidebar()"></div>
+<button class="sidebar-fab" id="sidebar-fab" onclick="toggleMobSidebar()" aria-label="打开导航">
+  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h12"/></svg>
+</button>
 <div class="layout">
-<aside class="sidebar">
+<aside class="sidebar" id="admin-sidebar">
   <div class="sidebar-logo">
     <div class="sidebar-logo-name">Trans-Search</div>
     <div class="sidebar-logo-sub">内容管理后台</div>
@@ -204,10 +223,9 @@ table.art-table tr:hover td{background:var(--bg)}
 <!-- 概览 -->
 <div class="tab-wrap active" id="tab-overview">
   <div class="page-header"><div class="page-title">概览</div><div class="page-sub">数据库当前状态</div></div>
-  <div class="stats-grid">
+  <div class="stats-grid" style="grid-template-columns:1fr 1fr">
     <div class="stat-box"><div class="stat-num" id="stat-chunks">--</div><div class="stat-label">向量块总数</div></div>
     <div class="stat-box"><div class="stat-num" id="stat-articles">--</div><div class="stat-label">已入库文章</div></div>
-    <div class="stat-box"><div class="stat-num" id="stat-model" style="font-size:14px;padding-top:6px">--</div><div class="stat-label">Embedding 模型</div></div>
   </div>
   <div class="card">
     <div class="card-title"><div class="card-title-left"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>知识树概览</div>
@@ -219,7 +237,7 @@ table.art-table tr:hover td{background:var(--bg)}
 <!-- 知识树管理 -->
 <div class="tab-wrap" id="tab-tree-edit">
   <div class="page-header"><div class="page-title">知识树管理</div><div class="page-sub">左侧管理树结构，右侧查看节点文章，支持批量操作</div></div>
-  <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start">
+  <div class="tree-editor-split" style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start">
     <!-- 左：树编辑器 -->
     <div class="card" style="padding:0">
       <div class="tree-editor-toolbar">
@@ -273,7 +291,7 @@ table.art-table tr:hover td{background:var(--bg)}
         <datalist id="cat-list"><option value="医疗"><option value="法律"><option value="心理"><option value="生活"><option value="社群"><option value="其他"></datalist>
       </div>
     </div>
-    <div class="form-row"><label class="form-label">章节路径（斜杠分隔）</label><input type="text" id="s-chapter" placeholder="如：激素治疗/HRT入门"></div>
+    <div class="form-row"><label class="form-label">章节路径（斜杠分隔）</label><input type="text" id="s-chapter" list="chapter-list" placeholder="如：激素治疗/HRT入门（可输入新路径）"></div>
     <div class="form-row"><label class="form-label">标签（逗号分隔）</label><input type="text" id="s-tags" placeholder="HRT, 激素"></div>
     <div class="form-row">
       <label class="form-label">内容标记</label>
@@ -409,7 +427,7 @@ table.art-table tr:hover td{background:var(--bg)}
         <input type="text" id="edit-category" list="cat-list" placeholder="输入分类">
       </div>
     </div>
-    <div class="form-row"><label class="form-label">章节路径</label><input type="text" id="edit-chapter"></div>
+    <div class="form-row"><label class="form-label">章节路径</label><input type="text" id="edit-chapter" list="chapter-list" placeholder="如：estrogen/estradiol（可输入新路径）"><datalist id="chapter-list"></datalist></div>
     <div class="form-row"><label class="form-label">标签（逗号分隔）</label><input type="text" id="edit-tags"></div>
     <div class="form-row">
       <label class="form-label">内容标记</label>
@@ -507,7 +525,6 @@ async function loadStats(){
   try{
     const r=await fetch(apiBase()+'/stats'); const d=await r.json();
     document.getElementById('stat-chunks').textContent=d.total_chunks??'--';
-    document.getElementById('stat-model').textContent=d.embed_model??'--';
     const r2=await fetch(apiBase()+'/tree'); const tree=await r2.json();
     let n=0; tree.forEach(s=>s.children.forEach(c=>c.children.forEach(ch=>n+=ch.children.length)));
     document.getElementById('stat-articles').textContent=n;
@@ -543,6 +560,7 @@ async function loadTreeEditor(){
     const r=await fetch(apiBase()+'/tree');
     teTree=await r.json();
     renderTeTree();
+    updateChapterDatalist();
   }catch(e){ area.innerHTML='<div class="empty" style="color:var(--red)">加载失败，请检查后端连接</div>'; }
 }
 
@@ -839,6 +857,35 @@ async function teBatchDelete(){
   teShowNodeArts(); loadStats(); loadTreeEditor();
 }
 
+// 更新章节路径 datalist（从知识树提取所有已有路径）
+function updateChapterDatalist(){
+  const dl=document.getElementById('chapter-list');
+  if(!dl) return;
+  const paths=new Set();
+  function walk(node, sitePrefix){
+    if(node.type==='article') return;
+    if(node.type==='chapter'){
+      paths.add(sitePrefix);
+    }
+    (node.children||[]).forEach(c=>{
+      const prefix = node.type==='site' ? node.name :
+                     node.type==='category' ? sitePrefix+'/'+node.name :
+                     node.type==='chapter' ? sitePrefix+'/'+node.name : sitePrefix;
+      walk(c, prefix);
+    });
+  }
+  teTree.forEach(site=>{
+    (site.children||[]).forEach(cat=>{
+      (cat.children||[]).forEach(ch=>{
+        paths.add(ch.name);
+        paths.add(cat.name+'/'+ch.name);
+        paths.add(site.name+'/'+cat.name+'/'+ch.name);
+      });
+    });
+  });
+  dl.innerHTML=[...paths].sort().map(p=>`<option value="${esc(p)}">`).join('');
+}
+
 // ═══════════════════════════════════════════
 // 录入单篇
 // ═══════════════════════════════════════════
@@ -1060,6 +1107,7 @@ async function deleteArticle(id, btn){
 // 编辑文章 Modal
 // ═══════════════════════════════════════════
 function openEditModal(art){
+  updateChapterDatalist();
   document.getElementById('edit-id').value=art.article_id||'';
   document.getElementById('edit-title').value=art.title||'';
   document.getElementById('edit-url').value=art.url||'';
@@ -1154,10 +1202,27 @@ async function testLlmApi(){
   btn.disabled=false;
 }
 
+// 移动端侧边栏
+function toggleMobSidebar(){
+  const sb=document.getElementById('admin-sidebar');
+  const ov=document.getElementById('mob-overlay');
+  const open=sb.classList.toggle('mob-open');
+  ov.style.display=open?'block':'none';
+}
+function closeMobSidebar(){
+  document.getElementById('admin-sidebar').classList.remove('mob-open');
+  document.getElementById('mob-overlay').style.display='none';
+}
+// 切换 tab 时在移动端自动关闭侧边栏
+const _origSwitchTab=switchTab;
+function switchTab(name,el){
+  _origSwitchTab(name,el);
+  if(window.innerWidth<=720) closeMobSidebar();
+}
+
 // 初始化
 (function(){const k=localStorage.getItem('adminKey');if(k)document.getElementById('admin-key').value=k;})();
 checkApi();
 </script>
 </body>
 </html>
-<!-- rebuild: 20260628 -->
