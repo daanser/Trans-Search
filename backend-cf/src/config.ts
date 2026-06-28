@@ -20,7 +20,7 @@ export class Config {
   hybrid_search: boolean
 
   constructor(env: Env) {
-    this.openai_base_url = env.OPENAI_BASE_URL ?? "https://open.bigmodel.cn/api/paas/v4/"
+    this.openai_base_url = env.OPENAI_BASE_URL ?? "https://open.bigmodel.cn/api/paas/v4"
     this.embed_model = env.EMBED_MODEL ?? "embedding-3"
     this.embed_dim = parseInt(env.EMBED_DIM ?? "2048", 10)
     this.chat_model = env.CHAT_MODEL ?? "glm-4.7-flash"
