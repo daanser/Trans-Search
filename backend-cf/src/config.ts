@@ -6,6 +6,7 @@ const ALLOWED_BASE_URL_PREFIXES = [
   "https://api.moonshot.cn",
   "https://api.deepseek.com",
   "https://dashscope.aliyuncs.com",
+  "https://api.siliconflow.cn",
 ]
 
 export class Config {
@@ -18,6 +19,9 @@ export class Config {
   score_threshold: number
   query_expand: boolean
   hybrid_search: boolean
+  reranker_base_url: string
+  rerank_model: string
+  rerank_enabled: boolean
 
   constructor(env: Env) {
     this.openai_base_url = env.OPENAI_BASE_URL ?? "https://open.bigmodel.cn/api/paas/v4/"
@@ -29,6 +33,9 @@ export class Config {
     this.score_threshold = parseFloat(env.SCORE_THRESHOLD ?? "0.25")
     this.query_expand = (env.QUERY_EXPAND ?? "true").toLowerCase() === "true"
     this.hybrid_search = (env.HYBRID_SEARCH ?? "true").toLowerCase() === "true"
+    this.reranker_base_url = env.RERANKER_BASE_URL ?? "https://api.siliconflow.cn/v1/"
+    this.rerank_model = env.RERANK_MODEL ?? "BAAI/bge-reranker-v2-m3"
+    this.rerank_enabled = (env.RERANK_ENABLED ?? "true").toLowerCase() === "true"
   }
 
   apply(update: ConfigUpdate) {
@@ -41,6 +48,9 @@ export class Config {
     if (update.score_threshold !== undefined) this.score_threshold = update.score_threshold
     if (update.query_expand !== undefined) this.query_expand = update.query_expand
     if (update.hybrid_search !== undefined) this.hybrid_search = update.hybrid_search
+    if (update.reranker_base_url !== undefined) this.reranker_base_url = update.reranker_base_url
+    if (update.rerank_model !== undefined) this.rerank_model = update.rerank_model
+    if (update.rerank_enabled !== undefined) this.rerank_enabled = update.rerank_enabled
   }
 
   toJSON() {
@@ -52,6 +62,8 @@ export class Config {
       score_threshold: this.score_threshold,
       query_expand: this.query_expand,
       hybrid_search: this.hybrid_search,
+      rerank_model: this.rerank_model,
+      rerank_enabled: this.rerank_enabled,
     }
   }
 }

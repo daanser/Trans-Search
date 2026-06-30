@@ -60,6 +60,10 @@
       {{ error }}
     </div>
 
+    <div v-if="expandedQuery" class="mb-4 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+      扩展搜索词：<span class="font-medium">{{ expandedQuery }}</span>
+    </div>
+
     <div v-if="results.length > 0" class="space-y-4">
       <p class="text-sm text-gray-400 mb-2">共 {{ results.length }} 条结果</p>
       <div
@@ -96,6 +100,7 @@ const query = ref("")
 const loading = ref(false)
 const results = ref<any[]>([])
 const error = ref("")
+const expandedQuery = ref<string | null>(null)
 
 const filters = reactive({
   category: "",
@@ -111,8 +116,9 @@ async function doSearch() {
   loading.value = true
   error.value = ""
   results.value = []
+  expandedQuery.value = null
   try {
-    results.value = await search({
+    const res = await search({
       q,
       category: filters.category || undefined,
       source_site: filters.source_site || undefined,
@@ -120,6 +126,8 @@ async function doSearch() {
       tags: filters.tags || undefined,
       top_k: filters.top_k,
     })
+    results.value = res.results
+    expandedQuery.value = res.expandedQuery
   } catch (e: any) {
     error.value = e.message
   } finally {

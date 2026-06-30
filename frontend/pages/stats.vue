@@ -34,6 +34,16 @@
         <p class="text-sm text-gray-800">{{ stats.chunk_size ?? "—" }}</p>
         <p class="text-xs text-gray-400 mt-1">分块大小</p>
       </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <p class="text-sm font-mono text-gray-800 break-all">{{ stats.rerank_model ?? "—" }}</p>
+        <p class="text-xs text-gray-400 mt-1">Rerank 模型</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <p class="text-lg font-bold" :class="stats.rerank_enabled ? 'text-green-600' : 'text-gray-400'">
+          {{ stats.rerank_enabled ? "开启" : "关闭" }}
+        </p>
+        <p class="text-xs text-gray-400 mt-1">Rerank 重排</p>
+      </div>
     </div>
   </div>
 </template>
