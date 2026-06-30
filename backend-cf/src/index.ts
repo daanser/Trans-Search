@@ -4,6 +4,7 @@ import { Config, loadConfig, saveConfig, validateBaseUrl, validateChunkSize, val
 import { sanitizeQuery, splitChunks, buildContextPrefix, parseTagList } from "./chunk"
 import { textToSparse } from "./sparse"
 import { embed, expandQuery } from "./embedding"
+import { rerank } from "./rerank"
 import { requireAdmin } from "./auth"
 import { checkRateLimit, getClientIP } from "./rate-limit"
 import {
@@ -85,6 +86,7 @@ app.get("/search", async (c) => {
   const chapter = c.req.query("chapter") ?? null
   const tags = parseTagList(c.req.query("tags") ?? null)
   const topK = Math.min(Math.max(parseInt(c.req.query("top_k") ?? "8", 10) || 8, 1), 20)
+  const rerankTopK = Math.min(topK * 2, 40)
 
   const qfilter = buildFilter(category, tags, sourceSite, chapter)
 
@@ -98,18 +100,18 @@ app.get("/search", async (c) => {
   if (cfg.hybrid_search) {
     hits = await queryPoints(c.env, {
       prefetch: [
-        { query: queryVector, using: "dense", filter: qfilter, limit: topK * 4 },
-        { query: querySparse, using: "sparse", filter: qfilter, limit: topK * 4 },
+        { query: queryVector, using: "dense", filter: qfilter, limit: rerankTopK * 4 },
+        { query: querySparse, using: "sparse", filter: qfilter, limit: rerankTopK * 4 },
       ],
       query: { fusion: "rrf" },
-      limit: topK * 3,
+      limit: rerankTopK * 3,
     })
   } else {
     hits = await queryPoints(c.env, {
       query: queryVector,
       using: "dense",
       filter: qfilter,
-      limit: topK * 3,
+      limit: rerankTopK * 3,
       scoreThreshold: cfg.score_threshold,
     })
   }
@@ -133,13 +135,37 @@ app.get("/search", async (c) => {
       score: Math.round(h.score * 10000) / 10000,
       chunk_index: (p["chunk_index"] as number) ?? 0,
     })
-    if (seen.size >= topK) break
+    if (seen.size >= rerankTopK) break
   }
 
-    const results = Array.from(seen.values())
-    return c.json(results, 200, {
-      "X-Expanded-Query": encodeURIComponent(expandedQ),
-    })
+  let results = Array.from(seen.values())
+
+  // ── Rerank: 重新排序，取前 topK 个 ──
+  if (cfg.rerank_enabled) {
+  try {
+    const documents = results.map((r) => `${r.title}\n${r.excerpt}`)
+    const rerankResults = await rerank(q, documents, c.env, cfg)
+    const reranked: SearchResult[] = []
+    for (const rr of rerankResults.sort((a, b) => b.relevance_score - a.relevance_score)) {
+      const idx = rr.index
+      if (idx >= 0 && idx < results.length) {
+        results[idx].score = Math.round(rr.relevance_score * 10000) / 10000
+        reranked.push(results[idx])
+      }
+      if (reranked.length >= topK) break
+    }
+    results = reranked
+  } catch (e) {
+    console.warn(`Rerank failed, falling back to vector search order: ${e}`)
+    results = results.slice(0, topK)
+  }
+  } else {
+    results = results.slice(0, topK)
+  }
+
+  return c.json(results, 200, {
+    "X-Expanded-Query": encodeURIComponent(expandedQ),
+  })
   })
 
 app.get("/tree", async (c) => {
@@ -221,6 +247,8 @@ app.get("/stats", async (c) => {
     chat_model: cfg.chat_model,
     query_expand: cfg.query_expand,
     hybrid_search: cfg.hybrid_search,
+    rerank_model: cfg.rerank_model,
+    rerank_enabled: cfg.rerank_enabled,
     chunk_size: cfg.chunk_size,
     score_threshold: cfg.score_threshold,
   })

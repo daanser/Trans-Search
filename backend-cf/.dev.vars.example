@@ -1,4 +1,18 @@
+# ── 必填 ──────────────────────────────────────────
 OPENAI_API_KEY=your_openai_api_key
+ADMIN_API_KEY=your_admin_key
 QDRANT_URL=https://your-cluster.cloud.qdrant.io:6333
 QDRANT_API_KEY=your_qdrant_api_key
-ADMIN_API_KEY=your_admin_key
+
+# ── Reranker（可选，默认硅基流动 + BAAI/bge-reranker-v2-m3）─
+# 不填则使用 OPENAI_API_KEY
+RERANKER_API_KEY=your_reranker_api_key
+# RERANKER_BASE_URL=https://api.siliconflow.cn/v1/
+# RERANK_MODEL=BAAI/bge-reranker-v2-m3
+# RERANK_ENABLED=true
+
+# ── 可选覆盖 ──────────────────────────────────────
+# OPENAI_BASE_URL=https://open.bigmodel.cn/api/paas/v4/
+# EMBED_MODEL=embedding-3
+# CHAT_MODEL=glm-4.7-flash
+# EMBED_DIM=2048

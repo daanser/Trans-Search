@@ -52,10 +52,24 @@ export function useApi() {
     chapter?: string
     tags?: string
     top_k?: number
-  }) {
-    return request<any[]>(`/api/search`, {
-      params: params as Record<string, string | number | undefined>,
+  }): Promise<{ results: any[]; expandedQuery: string | null }> {
+    let url = `${baseURL()}/api/search`
+    const qs = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+      .join("&")
+    if (qs) url += `?${qs}`
+
+    const res = await fetch(url, {
+      headers: { "Content-Type": "application/json" },
     })
+    const data = await res.json()
+    if (!res.ok) throw new Error((data as { detail?: string })?.detail ?? `HTTP ${res.status}`)
+
+    const raw = res.headers.get("X-Expanded-Query")
+    const expandedQuery = raw ? decodeURIComponent(raw) : null
+
+    return { results: data as any[], expandedQuery }
   }
 
   async function getTree() {

@@ -19,6 +19,10 @@ export interface Env {
   TITLE_MAX_LEN?: string
   TAGS_MAX_COUNT?: string
   ENV?: string
+  RERANKER_API_KEY?: string
+  RERANKER_BASE_URL?: string
+  RERANK_MODEL?: string
+  RERANK_ENABLED?: string
 }
 
 export interface ArticleInput {
@@ -67,6 +71,9 @@ export interface ConfigUpdate {
   score_threshold?: number
   query_expand?: boolean
   hybrid_search?: boolean
+  reranker_base_url?: string
+  rerank_model?: string
+  rerank_enabled?: boolean
 }
 
 export interface QdrantPoint {
