@@ -152,7 +152,7 @@ app.get("/search", async (c) => {
   const chapter = c.req.query("chapter") ?? null
   const tags = parseTagList(c.req.query("tags") ?? null)
   const topK = Math.min(Math.max(parseInt(c.req.query("top_k") ?? "8", 10) || 8, 1), 20)
-  const rerankTopK = Math.min(topK * 2, 40)
+  const rerankTopK = Math.min(Math.ceil(topK * 1.5), 40)
 
   const qfilter = buildFilter(category, tags, sourceSite, chapter)
 
